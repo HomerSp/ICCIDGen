@@ -27,10 +27,8 @@ void hex2bin(const std::string &str, uint8_t* out, int len) {
 
 bool processLine(std::string line, std::ostream& output) {
     uint8_t iccid[9];
-    if (line.length() == 19) {
-        hex2bin(line.substr(1), iccid, 9);
-    } else if (line.length() == 18) {
-        hex2bin(line, iccid, 9);
+    if (line.length() >= 18) {
+        hex2bin(line.substr(line.length() - 14), iccid, 7);
     } else {
         std::cerr << "Invalid iccid " << line << "\n";
         return false;
@@ -38,7 +36,7 @@ bool processLine(std::string line, std::ostream& output) {
 
     uint8_t sf_euimid[7];
     for (int i = 0; i < 7; i++) {
-        sf_euimid[i] = iccid[8 - i];
+        sf_euimid[i] = iccid[6 - i];
     }
 
     unsigned char hash[SHA_DIGEST_LENGTH];
