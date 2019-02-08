@@ -9,6 +9,15 @@
 
 #include <openssl/sha.h>
 
+void usage(char* prog) {
+    std::cerr << "Usage: " << prog << " <iccid file> [output csv]\n";
+    std::cerr << "\t<iccid list> is a text file with one iccid per line\n";
+    std::cerr << "\t[output csv] is optional and specifies where to write\n";
+    std::cerr << "\t\tthe output, in the format: ICCID;SF_EUIMID;EUIMID\n";
+    std::cerr << "\t\tone per line.\n";
+    std::cerr << "\t\tIf this is not specified it will write to stdout.\n";
+}
+
 void hex2bin(const std::string &str, uint8_t* out, int len) {
     for(int i = 0; i < len; i++) {
         char c1 = str[i * 2] - '0', c2 = str[i * 2 + 1] - '0';
@@ -60,7 +69,7 @@ bool processLine(std::string line, std::ostream& output) {
 
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 3) {
-        std::cerr << "Usage: " << argv[0] << " <iccid file> [out file]\n";
+        usage(argv[0]);
         return -1;
     }
 
@@ -78,7 +87,7 @@ int main(int argc, char **argv) {
             std::cerr << "Could not open output file " << argv[2] << "\n";
             return -1;
         }
-        
+
         output = &outFile;
     }
 
