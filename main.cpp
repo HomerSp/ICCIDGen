@@ -7,62 +7,43 @@
 #include <cstdint>
 #include <cstring>
 
-#include <openssl/sha.h>
+#include "encrypt.h"
+#include "hash.h"
+#include "utils.h"
 
 void usage(char* prog) {
-    std::cerr << "Usage: " << prog << " <iccid file> [output csv]\n";
-    std::cerr << "\t<iccid list> is a text file with one iccid per line\n";
+    std::cerr << "Usage: " << prog << " <input csv> [output csv]\n";
+    std::cerr << "\t<input csv> is a comma-separated file with the format:\n";
+    std::cerr << "\t\tICCID;KI Key;Transport Key\n";
+    std::cerr << "\t\tone per line.\n";
     std::cerr << "\t[output csv] is optional and specifies where to write\n";
     std::cerr << "\t\tthe output, in the format: ICCID;SF_EUIMID;EUIMID\n";
     std::cerr << "\t\tone per line.\n";
-    std::cerr << "\t\tIf this is not specified it will write to stdout.\n";
+    std::cerr << "\t\tIf this is not specified it will write to the console.\n";
 }
 
-void hex2bin(const std::string &str, uint8_t* out, int len) {
-    for(int i = 0; i < len; i++) {
-        char c1 = str[i * 2] - '0', c2 = str[i * 2 + 1] - '0';
-        out[i] = (c1 << 4) | (c2 & 0x0f);
-    }
-}
+bool processLine(std::string line, std::ostream& output)
+{
+    std::vector<std::string> split = splitString(line, ';');
+    if (split.size() > 0) {
+        std::string sfEuimid, euimid;
+        iccidToEuimid(split.at(0), sfEuimid, euimid);
 
-bool processLine(std::string line, std::ostream& output) {
-    uint8_t iccid[9];
-    if (line.length() >= 18) {
-        hex2bin(line.substr(line.length() - 14), iccid, 7);
-    } else {
-        std::cerr << "Invalid iccid " << line << "\n";
-        return false;
+        output << split.at(0) << ";" << sfEuimid << ";" << euimid;
     }
 
-    uint8_t sf_euimid[7];
-    for (int i = 0; i < 7; i++) {
-        sf_euimid[i] = iccid[6 - i];
-    }
-
-    unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA1(sf_euimid, 7, hash);
-
-    uint8_t euimid[4];
-    euimid[0] = hash[SHA_DIGEST_LENGTH - 1];
-    euimid[1] = hash[SHA_DIGEST_LENGTH - 2];
-    euimid[2] = hash[SHA_DIGEST_LENGTH - 3];
-    euimid[3] = 0x80;
-
-    output << line << ";";
-    for (int i = 0; i < 7; i++) {
-        output << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << +sf_euimid[i];
-    }
-
-    output << ";";
-
-    for (int i = 0; i < 4; i++) {
-        output << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << +euimid[i];
+    if (split.size() >= 3) {
+        std::string key = split.at(2);
+        std::string encrypted;
+        bool ret = encrypt(split.at(1), key, encrypted, (key.length() == 16) ? TYPE_DES : (key.length() == 48) ? TYPE_DES3 : TYPE_AES128);
+        if (ret) {
+            output << ";" << encrypted;
+        }
     }
 
     output << "\n";
 
     return true;
-
 }
 
 int main(int argc, char **argv) {
