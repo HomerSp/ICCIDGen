@@ -16,6 +16,7 @@ void usage(char* prog) {
     std::cerr << "\t<input csv> is a comma-separated file with the format:\n";
     std::cerr << "\t\tICCID;KI Key;Transport Key\n";
     std::cerr << "\t\tone per line.\n";
+    std::cerr << "\t\tKI Key and Transport Key are optional\n";
     std::cerr << "\t[output csv] is optional and specifies where to write\n";
     std::cerr << "\t\tthe output, in the format: ICCID;SF_EUIMID;EUIMID\n";
     std::cerr << "\t\tone per line.\n";
