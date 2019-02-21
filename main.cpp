@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <cstring>
 
-#include "encrypt.h"
-#include "hash.h"
-#include "utils.h"
+#include "include/encrypt.h"
+#include "include/hash.h"
+#include "include/utils.h"
 
 void usage(char* prog) {
     std::cerr << "Usage: " << prog << " <input csv> [output csv]\n";

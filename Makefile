@@ -1,19 +1,24 @@
-all: iccidgen.exe
+PROJECT = iccidgen.exe
 
-iccidgen.exe: main.o encrypt.o hash.o utils.o
-	 i686-w64-mingw32-g++-win32 -o iccidgen.exe -static main.o encrypt.o hash.o utils.o -lssl -lcrypto -lws2_32
+CC = i686-w64-mingw32-g++-win32
 
-main.o: main.cpp
-	 i686-w64-mingw32-g++-win32 -c main.cpp -fpermissive
+CFLAGS = -fpermissive
+INCLUDES = -Iinclude
 
-encrypt.o: encrypt.cpp
-	 i686-w64-mingw32-g++-win32 -c encrypt.cpp -fpermissive
+LFLAGS = -static
+LIBS = -lssl -lcrypto -lws2_32
 
-hash.o: hash.cpp
-	 i686-w64-mingw32-g++-win32 -c hash.cpp -fpermissive
+SRCS = main.cpp encrypt.cpp hash.cpp utils.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-utils.o: utils.cpp
-	 i686-w64-mingw32-g++-win32 -c utils.cpp -fpermissive
+all: $(PROJECT)
+	@echo Compiled $(PROJECT)
+
+$(PROJECT): $(OBJS) 
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(PROJECT) $(OBJS) $(LFLAGS) $(LIBS)
+
+.cpp.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	 rm main.o encrypt.o hash.o utils.o iccidgen.exe
+	$(RM) *.o *~ $(PROJECT)

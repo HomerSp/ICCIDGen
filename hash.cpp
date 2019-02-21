@@ -1,7 +1,7 @@
 #include <openssl/sha.h>
 
-#include "hash.h"
-#include "utils.h"
+#include "include/hash.h"
+#include "include/utils.h"
 
 bool iccidToEuimid(const std::string& iccid, std::string& sfEuimid, std::string& euimid)
 {
