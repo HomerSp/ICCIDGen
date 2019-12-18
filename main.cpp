@@ -11,29 +11,63 @@
 #include "include/hash.h"
 #include "include/utils.h"
 
+static int sVersion = 2;
+static int sVersionMinor = 0;
+
 void usage(char* prog) {
-    std::cerr << "Usage: " << prog << " <input csv> [output csv]\n";
-    std::cerr << "\t<input csv> is a comma-separated file with the format:\n";
-    std::cerr << "\t\tICCID;KI Key;Transport Key\n";
-    std::cerr << "\t\tone per line.\n";
-    std::cerr << "\t\tKI Key and Transport Key are optional\n";
-    std::cerr << "\t[output csv] is optional and specifies where to write\n";
-    std::cerr << "\t\tthe output, in the format: ICCID;SF_EUIMID;EUIMID\n";
-    std::cerr << "\t\tone per line.\n";
-    std::cerr << "\t\tIf this is not specified it will write to the console.\n";
+    std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
+        << "Usage: " << prog << " [-1] <input csv> [output csv]\n"
+        << "\t-1\n"
+        << "\t\tUse format version 1 (defaults to 2)\n"
+        << "\n"
+        << "\t<input csv>\n"
+        << "\t\tA comma-separated file, see Formats below for details\n"
+        << "\t\tone per line.\n"
+        << "\t\tKI Key and Transport Key are optional\n"
+        << "\n"
+        << "\t[output csv]\n"
+        << "\t\tOutput file, where to write the data\n"
+        << "\t\toptional and defaults to the console\n"
+        << "\n"
+        << "Formats\n"
+        << "\tVersion 1:\n"
+        << "\t\tInput\n"
+        << "\t\tICCID;KI Key;Transport Key\n"
+        << "\t\tOutput\n"
+        << "\t\tICCID;SF_EUIMID;pUIMID;Encrypted KI Key\n"
+        << "\tVersion 2:\n"
+        << "\t\tInput\n"
+        << "\t\tICCID;KI Key;Transport Key\n"
+        << "\t\tOutput\n"
+        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN AAA\n";
 }
 
 bool processLine(std::string line, std::ostream& output)
 {
     std::vector<std::string> split = splitString(line, ';');
     if (split.size() > 0) {
-        std::string sfEuimid, euimid;
-        iccidToEuimid(split.at(0), sfEuimid, euimid);
+        std::string iccid = split.at(0);
+        if (iccid.length() % 2 == 1) {
+            iccid += '0' + calculateCD(iccid);
+        }
 
-        output << split.at(0) << ";" << sfEuimid << ";" << euimid;
+        std::string sfEuimid, puimid;
+        switch (sVersion) {
+        case 1:
+            iccidToEuimid(iccid, sfEuimid, puimid);
+            output << iccid << ";" << sfEuimid << ";" << puimid;
+            break;
+        default:
+            std::string a12chap, mnaaa;
+            iccidToEuimidMeid(iccid, sfEuimid, puimid);
+            generateKey(iccid, a12chap, rand());
+            generateKey(sfEuimid, mnaaa, rand());
+            output << iccid << ";" << sfEuimid << ";" << puimid << ";" << a12chap << ";" << mnaaa;
+            break;
+        }       
     }
 
-    if (split.size() >= 3) {
+    if (sVersion == 1 && split.size() >= 3) {
         std::string key = split.at(2);
         std::string encrypted;
         bool ret = encrypt(split.at(1), key, encrypted, (key.length() == 16) ? TYPE_DES : (key.length() == 48) ? TYPE_DES3 : TYPE_AES128);
@@ -48,23 +82,31 @@ bool processLine(std::string line, std::ostream& output)
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2 || argc > 3) {
+    srand(time(NULL));
+
+    if (argc < 2 || argc > 4) {
         usage(argv[0]);
         return -1;
     }
 
-    std::ifstream stream(argv[1], std::ifstream::in);
+    int arg = 1;
+    if (std::string(argv[arg]) == "-1") {
+        sVersion = 1;
+        arg++;
+    }
+
+    std::ifstream stream(argv[arg], std::ifstream::in);
     if (!stream.good()) {
-        std::cerr << "Could not open file " << argv[1] << "\n";
+        std::cerr << "Could not open file " << argv[arg] << "\n";
         return -1;
     }
 
     std::ostream *output = &std::cout;
     std::ofstream outFile;
-    if (argc == 3) {
-        outFile.open(argv[2], std::ofstream::out);
+    if (argc == arg + 2) {
+        outFile.open(argv[arg + 1], std::ofstream::out);
         if (!outFile.good()) {
-            std::cerr << "Could not open output file " << argv[2] << "\n";
+            std::cerr << "Could not open output file " << argv[arg + 1] << "\n";
             return -1;
         }
 
