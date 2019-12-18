@@ -72,16 +72,23 @@ bool iccidToEuimidMeid(const std::string& iccid, std::string& sfEuimid, std::str
     return true;
 }
 
-bool generateKey(const std::string& iccid, std::string& key, int r)
+bool generateKey(const std::string& iccid, std::string& key)
 {
-    std::string tohash = iccid + std::to_string(r);
+    std::vector<unsigned char> tohash;
+    for (int i = 0; i < iccid.size(); i++) {
+        tohash.emplace_back(iccid[i]);
+    }
+
+    for (int i = 0; i < 16; i++) {
+        tohash.emplace_back(rand() % 256);
+    }
 
     unsigned char hash[SHA_DIGEST_LENGTH];
     SHA1(tohash.data(), tohash.size(), hash);
 
     std::vector<unsigned char> vec;
-    for (int i = 0; i < 16; i++) {
-        vec.emplace_back(hash[i] % 0x7F);
+    for (int i = 0, y = SHA_DIGEST_LENGTH - 1; i < 16; i++, y--) {
+        vec.emplace_back((hash[i] ^ hash[y]) % 0x7F);
     }
 
     key = bin2hex(vec);

@@ -12,7 +12,7 @@
 #include "include/utils.h"
 
 static int sVersion = 2;
-static int sVersionMinor = 0;
+static int sVersionMinor = 1;
 
 void usage(char* prog) {
     std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
@@ -60,8 +60,8 @@ bool processLine(std::string line, std::ostream& output)
         default:
             std::string a12chap, mnaaa;
             iccidToEuimidMeid(iccid, sfEuimid, puimid);
-            generateKey(iccid, a12chap, rand());
-            generateKey(sfEuimid, mnaaa, rand());
+            generateKey(iccid, a12chap);
+            generateKey(sfEuimid, mnaaa);
             output << iccid << ";" << sfEuimid << ";" << puimid << ";" << a12chap << ";" << mnaaa;
             break;
         }       
@@ -82,7 +82,7 @@ bool processLine(std::string line, std::ostream& output)
 }
 
 int main(int argc, char **argv) {
-    srand(time(NULL));
+    srand(time(0));
 
     if (argc < 2 || argc > 4) {
         usage(argv[0]);
