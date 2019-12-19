@@ -52,13 +52,13 @@ bool iccidToEuimidMeid(const std::string& iccid, std::string& sfEuimid, std::str
     unsigned char hash[SHA_DIGEST_LENGTH];
     SHA1(sfEuimidVec.data(), sfEuimidVec.size(), hash);
 
-    sfEuimidVec[0] = 0xA0;
-    sfEuimidVec[1] = 0x00;
-    sfEuimidVec[2] = 0x00;
-    sfEuimidVec[3] = hash[SHA_DIGEST_LENGTH - 1];
-    sfEuimidVec[4] = hash[SHA_DIGEST_LENGTH - 2];
-    sfEuimidVec[5] = hash[SHA_DIGEST_LENGTH - 3];
-    sfEuimidVec[6] = hash[SHA_DIGEST_LENGTH - 4];
+    sfEuimidVec.clear();
+    sfEuimidVec.emplace_back(0xA0);
+    sfEuimidVec.emplace_back(0x00);
+    sfEuimidVec.emplace_back(0x00);
+    for (int i = 1; i < 5; i++) {
+        sfEuimidVec.emplace_back(hash[SHA_DIGEST_LENGTH - i]);
+    }
 
     SHA1(sfEuimidVec.data(), sfEuimidVec.size(), hash);
 
