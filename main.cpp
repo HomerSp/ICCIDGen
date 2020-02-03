@@ -12,7 +12,7 @@
 #include "include/utils.h"
 
 static int sVersion = 2;
-static int sVersionMinor = 3;
+static int sVersionMinor = 4;
 
 void usage(char* prog) {
     std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
@@ -37,9 +37,9 @@ void usage(char* prog) {
         << "\t\tICCID;SF_EUIMID;pUIMID;Encrypted KI Key\n"
         << "\tVersion 2:\n"
         << "\t\tInput\n"
-        << "\t\tICCID;MN HA\n"
+        << "\t\tICCID;MN HA HEX\n"
         << "\t\tOutput\n"
-        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN AAA;SS User\n";
+        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN HA;MN AAA;HRPDCHAPSS;MIPPS\n";
 }
 
 bool processLine(std::string line, std::ostream& output)
@@ -72,12 +72,14 @@ bool processLine(std::string line, std::ostream& output)
             iccidToEuimidMeid(iccid, sfEuimid, puimid);
             generateKey(iccid, a12chap);
             generateKey(sfEuimid, mnaaa);
-            output << iccid << ";" << sfEuimid << ";" << puimid << ";" << a12chap << ";" << mnaaa;
+            output << iccid << ";" << sfEuimid << ";" << puimid << ";" << a12chap;
 
             if (split.size() > 1) {
                 std::string mnha = split.at(1);
                 std::string userSS = "";
                 generateUserSS(mnha, mnaaa, userSS);
+                output << ";" << mnha << ";" << mnaaa;
+                output << ";" << std::hex << std::setw(2) << a12chap.length() / 2 << a12chap;
                 output << ";" << userSS;
             }
 
