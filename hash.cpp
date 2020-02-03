@@ -98,6 +98,26 @@ bool generateKey(const std::string& iccid, std::string& key)
     return true;
 }
 
+bool generateUserSS(const std::string& mnHA, const std::string& mnAAA, std::string &userSS)
+{
+    std::vector<unsigned char> data;
+    data.emplace_back(static_cast<uint8_t>(0));
+
+    std::vector<unsigned char> hexData;
+    hex2bin(mnHA, hexData);
+
+    data.emplace_back(static_cast<uint8_t>(hexData.size()));
+    data.insert(data.end(), hexData.begin(), hexData.end());
+
+    hex2bin(mnAAA, hexData);
+
+    data.emplace_back(static_cast<uint8_t>(hexData.size()));
+    data.insert(data.end(), hexData.begin(), hexData.end());
+
+    userSS = bin2hex(data);
+    return true;
+}
+
 uint8_t calculateCD(const std::string& iccid)
 {
     if (iccid.length() < 18) {

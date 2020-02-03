@@ -12,7 +12,7 @@
 #include "include/utils.h"
 
 static int sVersion = 2;
-static int sVersionMinor = 2;
+static int sVersionMinor = 3;
 
 void usage(char* prog) {
     std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
@@ -37,9 +37,9 @@ void usage(char* prog) {
         << "\t\tICCID;SF_EUIMID;pUIMID;Encrypted KI Key\n"
         << "\tVersion 2:\n"
         << "\t\tInput\n"
-        << "\t\tICCID;KI Key;Transport Key\n"
+        << "\t\tICCID;MN HA\n"
         << "\t\tOutput\n"
-        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN AAA\n";
+        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN AAA;SS User\n";
 }
 
 bool processLine(std::string line, std::ostream& output)
@@ -56,24 +56,33 @@ bool processLine(std::string line, std::ostream& output)
         case 1:
             iccidToEuimid(iccid, sfEuimid, puimid);
             output << iccid << ";" << sfEuimid << ";" << puimid;
+
+            if (split.size() >= 3) {
+                std::string key = split.at(2);
+                std::string encrypted;
+                bool ret = encrypt(split.at(1), key, encrypted, (key.length() == 16) ? TYPE_DES : (key.length() == 48) ? TYPE_DES3 : TYPE_AES128);
+                if (ret) {
+                    output << ";" << encrypted;
+                }
+            }
+
             break;
-        default:
+        case 2:
             std::string a12chap, mnaaa;
             iccidToEuimidMeid(iccid, sfEuimid, puimid);
             generateKey(iccid, a12chap);
             generateKey(sfEuimid, mnaaa);
             output << iccid << ";" << sfEuimid << ";" << puimid << ";" << a12chap << ";" << mnaaa;
+
+            if (split.size() > 1) {
+                std::string mnha = split.at(1);
+                std::string userSS = "";
+                generateUserSS(mnha, mnaaa, userSS);
+                output << ";" << userSS;
+            }
+
             break;
         }       
-    }
-
-    if (sVersion == 1 && split.size() >= 3) {
-        std::string key = split.at(2);
-        std::string encrypted;
-        bool ret = encrypt(split.at(1), key, encrypted, (key.length() == 16) ? TYPE_DES : (key.length() == 48) ? TYPE_DES3 : TYPE_AES128);
-        if (ret) {
-            output << ";" << encrypted;
-        }
     }
 
     output << "\n";
