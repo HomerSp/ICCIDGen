@@ -8,7 +8,7 @@ INCLUDES = -Iinclude
 LFLAGS = -static
 LIBS = -lssl -lcrypto -lws2_32
 
-SRCS = main.cpp encrypt.cpp hash.cpp utils.cpp
+SRCS = main.cpp encrypt.cpp hash.cpp utils.cpp bitstream.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(PROJECT)

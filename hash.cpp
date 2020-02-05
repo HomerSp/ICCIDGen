@@ -4,6 +4,7 @@
 #include <openssl/sha.h>
 
 #include "include/hash.h"
+#include "include/bitstream.h"
 #include "include/utils.h"
 
 bool iccidToEuimid(const std::string& iccid, std::string& sfEuimid, std::string& puimid)
@@ -98,21 +99,53 @@ bool generateKey(const std::string& iccid, std::string& key)
     return true;
 }
 
+bool generateChapSS(const std::string& a12Chap, std::string &chapSS)
+{
+    std::vector<unsigned char> a12ChapData;
+    hex2bin(a12Chap, a12ChapData);
+
+    std::vector<uint8_t> bitData;
+    BitStream bitStream(bitData);
+    bitStream.write(1, 4);
+    bitStream.write(0, 4);
+
+    bitStream.write(a12ChapData.size(), 5);
+    for (unsigned char d: a12ChapData) {
+        bitStream.write(d, 8);
+    }
+
+    std::vector<unsigned char> data;
+    data.emplace_back(static_cast<uint8_t>(bitData.size()));
+    data.insert(data.end(), bitData.begin(), bitData.end());
+
+    chapSS = bin2hex(data);
+    return true;
+}
+
 bool generateUserSS(const std::string& mnHA, const std::string& mnAAA, std::string &userSS)
 {
+    std::vector<unsigned char> mnHAData, mnAAAData;
+    hex2bin(mnHA, mnHAData);
+    hex2bin(mnAAA, mnAAAData);
+
+    std::vector<uint8_t> bitData;
+    BitStream bitStream(bitData);
+    bitStream.write(1, 4);
+    bitStream.write(0, 4);
+
+    bitStream.write(mnAAAData.size(), 5);
+    for (unsigned char d: mnAAAData) {
+        bitStream.write(d, 8);
+    }
+
+    bitStream.write(mnHAData.size(), 5);
+    for (unsigned char d: mnHAData) {
+        bitStream.write(d, 8);
+    }
+
     std::vector<unsigned char> data;
-    data.emplace_back(static_cast<uint8_t>(0));
-
-    std::vector<unsigned char> hexData;
-    hex2bin(mnHA, hexData);
-
-    data.emplace_back(static_cast<uint8_t>(hexData.size()));
-    data.insert(data.end(), hexData.begin(), hexData.end());
-
-    hex2bin(mnAAA, hexData);
-
-    data.emplace_back(static_cast<uint8_t>(hexData.size()));
-    data.insert(data.end(), hexData.begin(), hexData.end());
+    data.emplace_back(static_cast<uint8_t>(bitData.size()));
+    data.insert(data.end(), bitData.begin(), bitData.end());
 
     userSS = bin2hex(data);
     return true;

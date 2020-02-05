@@ -76,10 +76,14 @@ bool processLine(std::string line, std::ostream& output)
 
             if (split.size() > 1) {
                 std::string mnha = split.at(1);
+                output << ";" << mnha << ";" << mnaaa;
+
+                std::string chapSS = "";
+                generateChapSS(a12chap, chapSS);
+                output << ";" << chapSS;
+
                 std::string userSS = "";
                 generateUserSS(mnha, mnaaa, userSS);
-                output << ";" << mnha << ";" << mnaaa;
-                output << ";" << std::hex << std::setw(2) << a12chap.length() / 2 << a12chap;
                 output << ";" << userSS;
             }
 
