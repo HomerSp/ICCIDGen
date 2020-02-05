@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include "include/bitstream.h"
-#include "include/utils.h"
+#include "../include/bitstream.h"
+#include "../include/utils.h"
 
 struct NaiEntry {
     uint8_t entryIndex;
