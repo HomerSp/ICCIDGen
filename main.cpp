@@ -12,7 +12,7 @@
 #include "include/utils.h"
 
 static int sVersion = 2;
-static int sVersionMinor = 5;
+static int sVersionMinor = 6;
 
 void usage(char* prog) {
     std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
@@ -79,7 +79,7 @@ bool processLine(std::string line, std::ostream& output)
                 output << ";" << mnha << ";" << mnaaa;
 
                 std::string chapSS = "";
-                generateChapSS(a12chap, chapSS);
+                generateHRPDChapSS(a12chap, chapSS);
                 output << ";" << chapSS;
 
                 std::string userSS = "";

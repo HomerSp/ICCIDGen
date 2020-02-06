@@ -99,16 +99,13 @@ bool generateKey(const std::string& iccid, std::string& key)
     return true;
 }
 
-bool generateChapSS(const std::string& a12Chap, std::string &chapSS)
+bool generateHRPDChapSS(const std::string& a12Chap, std::string &chapSS)
 {
     std::vector<unsigned char> a12ChapData;
     hex2bin(a12Chap, a12ChapData);
 
     std::vector<uint8_t> bitData;
     BitStream bitStream(bitData);
-    bitStream.write(1, 4);
-    bitStream.write(0, 4);
-
     bitStream.write(a12ChapData.size(), 5);
     for (unsigned char d: a12ChapData) {
         bitStream.write(d, 8);
