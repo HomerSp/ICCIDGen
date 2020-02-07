@@ -12,7 +12,7 @@
 #include "include/utils.h"
 
 static int sVersion = 2;
-static int sVersionMinor = 6;
+static int sVersionMinor = 7;
 
 void usage(char* prog) {
     std::cerr << "iccidgen v" << sVersion << "." << sVersionMinor << "\n"
