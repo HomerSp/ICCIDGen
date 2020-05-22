@@ -171,3 +171,49 @@ uint8_t calculateCD(const std::string& iccid)
 
     return (sum * 9) % 10;
 }
+
+std::string generateMDN(const std::string& iccid) {
+    return "000000" + iccid.substr(iccid.length() - 5, 4);
+}
+
+std::string generateHRPDUPP(const std::string& user)
+{
+    std::vector<uint8_t> data;
+    data.push_back(static_cast<uint8_t>(user.length() + 1));
+    data.push_back(static_cast<uint8_t>(user.length()));
+    data.insert(data.end(), user.begin(), user.end());
+    return bin2hex(data);
+}
+
+std::string generateMIPUPP(const std::string& user)
+{
+    std::vector<uint8_t> data;
+    BitStream bs(data);
+    bs.write(1, 1);
+    bs.write(1, 2);
+    bs.write(3, 3);
+    bs.write(0, 6);
+    bs.write(1, 4);
+    bs.write(0, 4);
+    bs.write(user.length(), 8);
+    for (char c: user) {
+        bs.write(c, 8);
+    }
+
+    bs.write(1, 1);
+    bs.write(0, 32);
+    bs.write(0, 32);
+    bs.write(0, 32);
+    bs.write(0, 4);
+    bs.write(1, 1);
+    bs.write(0, 32);
+    bs.write(1, 4);
+    bs.write(1, 1);
+    bs.write(350, 32);
+
+    std::vector<uint8_t> retData;
+    retData.push_back(static_cast<uint8_t>(data.size()));
+    retData.insert(retData.end(), data.begin(), data.end());
+
+    return bin2hex(retData);
+}

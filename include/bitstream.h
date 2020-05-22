@@ -5,6 +5,8 @@ class BitStream {
 public:
     BitStream(std::vector<uint8_t>& data);
 
+    uint64_t offset() const { return mOffset; }
+
     uint32_t read(unsigned count);
     void write(uint32_t value, unsigned count);
 

@@ -37,9 +37,9 @@ void usage(char* prog) {
         << "\t\tICCID;SF_EUIMID;pUIMID;Encrypted KI Key\n"
         << "\tVersion 2:\n"
         << "\t\tInput\n"
-        << "\t\tICCID;MN HA HEX\n"
+        << "\t\tICCID;MN HA HEX;[MDN]\n"
         << "\t\tOutput\n"
-        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN HA;MN AAA;HRPDCHAPSS;MIPPS\n";
+        << "\t\tICCID;SF_EUIMID;pUIMID;A12 CHAP;MN HA;MN AAA;HRPDCHAPSS;MIPPS;HRPDUPP;MIPUPP\n";
 }
 
 bool processLine(std::string line, std::ostream& output)
@@ -86,6 +86,12 @@ bool processLine(std::string line, std::ostream& output)
                 generateUserSS(mnha, mnaaa, userSS);
                 output << ";" << userSS;
             }
+
+            std::string mdn = (split.size() > 2) ? split.at(2) : generateMDN(iccid);
+            std::string hrpdupp = generateHRPDUPP(mdn + "@evdo.custertel.com");
+            std::string mipupp = generateMIPUPP(mdn + "@custertel.com");
+            
+            output << ";" << hrpdupp << ";" << mipupp;
 
             break;
         }       
